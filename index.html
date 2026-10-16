@@ -1012,7 +1012,7 @@ footer a { margin:0 8px; }
 
 <script>
 /* ====== CONFIG ====== */
-var ZAPIER_WEBHOOK = '';
+var ZAPIER_WEBHOOK = 'https://hooks.zapier.com/hooks/catch/12217356/418chwr/';
 var FORMULAIRE = 'LP Véhicule de société B2B';
 
 var CTA_LABEL = "Finaliser ma demande de devis gratuit";
@@ -1183,7 +1183,7 @@ function showCard(n){
   document.getElementById('stepLabel').textContent = label;
   document.getElementById('stepPct').textContent = pct + ' %';
   marquerEtape(n === 'done' ? 6 : n);
-  document.getElementById('retourBtn').hidden = (n === 'done' || n <= 1);
+  document.getElementById('retourBtn').hidden = (n === 'done' || n <= 1 || n >= 4);   /* pas de retour sur le code postal ni les coordonnées */
   majRecap();
   if (n === 'done' && window.afficherRebond) window.afficherRebond();
   majUrl(n);
