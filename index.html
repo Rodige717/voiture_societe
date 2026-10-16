@@ -16,7 +16,7 @@
      que côté navigateur. Placée en tête, avant tout autre script.        -->
 <script>
 (function(){
-  var DOMAINE = '';   /* à renseigner une fois le domaine branché sur Cloudflare, ex. 'vehicule.hellodevis.fr' */
+  var DOMAINE = 'voiture.hellodevis.fr';
   if (DOMAINE && location.hostname !== DOMAINE && /\.pages\.dev$/.test(location.hostname)) {
     location.replace('https://' + DOMAINE + location.pathname + location.search + location.hash);
   }
@@ -1401,7 +1401,7 @@ document.getElementById('tel').addEventListener('input', function(){
 /* ---------- Remplissage automatique du code (WebOTP) ----------
    Chrome Android lit le SMS entrant et remplit le champ sans aucun clic.
    Condition cote expediteur : le SMS doit se terminer par une ligne
-       @vehicule.hellodevis.fr #123456
+       @voiture.hellodevis.fr #123456
    Inactif en apercu (aucun SMS n'est envoye). */
 var otpAbort = null;
 
