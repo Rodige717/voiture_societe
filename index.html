@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LP Véhicule de société — aperçu</title>
+<title>Hellodevis Véhicule de société — Jusqu'à 3 devis gratuits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Police : un seul fichier variable, chargé sans bloquer le rendu -->
@@ -16,8 +16,8 @@
      que côté navigateur. Placée en tête, avant tout autre script.        -->
 <script>
 (function(){
-  var DOMAINE = 'vehicule.hellodevis.fr';
-  if (location.hostname !== DOMAINE && /\.pages\.dev$/.test(location.hostname)) {
+  var DOMAINE = '';   /* à renseigner une fois le domaine branché sur Cloudflare, ex. 'vehicule.hellodevis.fr' */
+  if (DOMAINE && location.hostname !== DOMAINE && /\.pages\.dev$/.test(location.hostname)) {
     location.replace('https://' + DOMAINE + location.pathname + location.search + location.hash);
   }
 })();
@@ -25,12 +25,12 @@
 
 <!-- ====== TRACEURS PUBLICITAIRES : chargés uniquement après consentement ====== -->
 <script>
-var GADS_ID         = '';
-var GADS_CONVERSION = '';
-var FB_PIXEL_ID     = '';
-var OAI_PIXEL_ID    = '';
-var CLARITY_ID      = '';   /* Microsoft Clarity : enregistrement des sessions */
-var POSTHOG_KEY     = '';
+var GADS_ID         = 'AW-11139707353';
+var GADS_CONVERSION = 'AW-11139707353/cP1XCO_81YMdENnj6b8p';
+var FB_PIXEL_ID     = '502969573835971';
+var OAI_PIXEL_ID    = '9rk6Hd975fYzVJVPc4PQSc';
+var CLARITY_ID      = 'yqwwm5yf1s';   /* Microsoft Clarity : enregistrement des sessions */
+var POSTHOG_KEY     = 'phc_yXPEaGfcuwo8uAjUpSaGPPqipoGo7NvMkqzuv2EqKDGa';
 var POSTHOG_HOST    = 'https://eu.i.posthog.com';   /* hébergement européen */
 
 var consentOK = false;
@@ -63,7 +63,6 @@ function propriete(cle, valeur){
 function loadTrackers(){
   if (consentOK) return;
   consentOK = true;
-  if (!GADS_ID && !FB_PIXEL_ID && !POSTHOG_KEY && !CLARITY_ID) return;   /* aperçu : rien à charger */
 
   /* Meta */
   !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
@@ -1021,7 +1020,7 @@ var consentement = null;       /* horodatage + texte, enregistrés au clic sur �
 /* Mode aperçu : ?apercu=<CLE_APERCU> contourne la vérification SMS et bloque
    tout envoi (Zapier, conversions). Sert à relire la page de bout en bout. */
 var CLE_APERCU = 'hd2026';
-var APERCU = true;   /* COPIE D'APERÇU : toujours actif, aucun envoi possible */
+var APERCU = (new URLSearchParams(location.search).get('apercu') === CLE_APERCU);
 var envoiFait = false;         /* garantit un envoi unique */
 
 function apercuRemplir(){
@@ -1052,7 +1051,7 @@ if (APERCU) {
     var b = document.createElement('div');
     b.id = 'apercuBandeau';
     var t = document.createElement('span');
-    t.textContent = 'Aperçu de travail — aucun suivi, aucun lead envoyé';
+    t.textContent = 'Mode aperçu — vérification SMS désactivée, aucun lead envoyé';
     var lien = document.createElement('button');
     lien.type = 'button'; lien.id = 'apercuFin';
     lien.textContent = 'Aller à la fin';
@@ -1063,10 +1062,10 @@ if (APERCU) {
 }
 
 /* Rebond assurance sur la page de remerciement */
-var ZAPIER_ASSURANCE   = '';
+var ZAPIER_ASSURANCE   = 'https://hooks.zapier.com/hooks/catch/12217356/4me72ra/';
 var ID_FORM_ASSURANCE  = '7391482056113847';   /* identifiant propre au formulaire assurance */
-var ZAPIER_ENERGIE     = '';
-var ZAPIER_MANUTENTION = '';
+var ZAPIER_ENERGIE     = 'https://hooks.zapier.com/hooks/catch/12217356/4mevcxw/';
+var ZAPIER_MANUTENTION = 'https://hooks.zapier.com/hooks/catch/12217356/4mcoq2k/';
 var ID_FORM_MANUTENTION= '8153604927381560';
 var ID_FORM_ENERGIE    = '6204915738260194';
 
@@ -1280,7 +1279,7 @@ function hideErr(id){ document.getElementById(id).classList.remove('show'); }
 function val(id){ return document.getElementById(id).value.trim(); }
 
 /* ====== VÉRIFICATION DU NUMÉRO PAR SMS ====== */
-var SMS_API = '';
+var SMS_API = 'https://mc.hellolead.pro/mon_compte/api/smspartner/envoi_code_verification.php';
 var SMS_ATTENTE = 120;                 /* délai imposé entre deux envois, en secondes */
 
 var smsVerifie = false, smsNumero = '', smsTimer = null, smsReste = 0;
