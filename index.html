@@ -646,10 +646,11 @@ footer a { margin:0 8px; }
   </section>
 
   <section class="card" id="card5">
-    <h2>Où pouvons-nous vous envoyer vos devis ?</h2>
-      <p class="recap" data-recap></p>
-    <div class="err" id="err4"></div>
-    <form id="formContact" onsubmit="return false;" autocomplete="on">
+    <h2>À qui adresser vos devis ?</h2>
+    <p class="sub">Plus que deux petites étapes.</p>
+    <p class="recap" data-recap></p>
+    <div class="err" id="err5"></div>
+    <form id="formIdentite" onsubmit="return false;" autocomplete="on">
       <div class="row">
         <div class="field">
           <label for="prenom">Prénom</label>
@@ -666,6 +667,17 @@ footer a { margin:0 8px; }
         <input type="text" id="entreprise" name="organization" autocomplete="organization" placeholder="Ex. Martin Plomberie">
       </div>
 
+      <button type="button" class="btn" id="identiteBtn">Continuer</button>
+    </form>
+  </section>
+
+  <!-- ===== ÉCRAN B : CONTACT + CODE SMS ===== -->
+  <section class="card" id="card6">
+    <h2>Où vous envoyer vos devis ?</h2>
+    <p class="sub">Dernière étape : vos offres arrivent par mail et par SMS.</p>
+    <div class="err" id="err4"></div>
+    <form id="formContact" onsubmit="return false;" autocomplete="on">
+
       <div class="field">
         <label for="email">Adresse mail professionnelle</label>
         <input type="email" id="email" name="email" autocomplete="email" placeholder="julien@martin-plomberie.fr">
@@ -676,7 +688,7 @@ footer a { margin:0 8px; }
         <label for="tel">Téléphone mobile</label>
         <div class="telrow">
           <input type="tel" id="tel" name="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="06 12 34 56 78">
-          <button type="button" class="btn-sms" id="smsSend">Recevoir le code</button>
+          <button type="button" class="btn-sms" id="smsSend" hidden>Recevoir le code</button>
         </div>
         <p class="help">Nous vérifions votre numéro par SMS : c'est par là que nous vous indiquons les concessionnaires retenus.</p>
 
@@ -693,19 +705,20 @@ footer a { margin:0 8px; }
         <p class="sms-ok" id="smsOk" style="display:none">Numéro vérifié</p>
       </div>
 
-      <p class="consent" id="consentTxt">En cliquant sur «&nbsp;Recevoir le code&nbsp;», j'accepte d'être recontacté par SMS et par téléphone, et que ma demande soit transmise à 3 concessionnaires au maximum, dans les conditions décrites dans les <a href="https://hellodevis.fr/mentions-legales/" target="_blank" rel="noopener">mentions légales</a> et la <a href="https://hellodevis.fr/politique-de-confidentialite-donnees-personnelles/" target="_blank" rel="noopener">politique de confidentialité</a> de Hellodevis.</p>
+      <p class="consent" id="consentTxt">En cliquant sur «&nbsp;Recevoir mon code et finaliser&nbsp;», j'accepte d'être recontacté par SMS et par téléphone, et que ma demande soit transmise à 3 concessionnaires au maximum, dans les conditions décrites dans les <a href="https://hellodevis.fr/mentions-legales/" target="_blank" rel="noopener">mentions légales</a> et la <a href="https://hellodevis.fr/politique-de-confidentialite-donnees-personnelles/" target="_blank" rel="noopener">politique de confidentialité</a> de Hellodevis.</p>
+
+      <button type="button" class="btn" id="finalBtn">Recevoir mon code et finaliser</button>
 
       <div class="hp" aria-hidden="true">
         <label for="website">Ne pas remplir ce champ</label>
         <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
       </div>
 
+
       <div class="next">
         <p><strong>Et ensuite ?</strong> Un SMS vous est transmis en moins de 24 h pour vous indiquer quels concessionnaires vont revenir vers vous avec un véhicule correspondant à vos critères.</p>
         <p>Votre demande peut être transmise à jusqu'à 3 concessionnaires, afin de vous permettre de comparer leurs propositions et d'échanger avec eux sur votre projet d'achat.</p>
       </div>
-
-      <button type="button" class="btn" id="finalBtn">Finaliser ma demande de devis gratuit</button>
     </form>
   </section>
 
@@ -1014,8 +1027,8 @@ footer a { margin:0 8px; }
 var ZAPIER_WEBHOOK = 'https://hooks.zapier.com/hooks/catch/12217356/418chwr/';
 var FORMULAIRE = 'LP Véhicule de société B2B';
 
-var CTA_LABEL = "Finaliser ma demande de devis gratuit";
-var consentement = null;       /* horodatage + texte, enregistrés au clic sur « Recevoir le code » */
+var CTA_LABEL = "Recevoir mon code et finaliser";
+var consentement = null;       /* horodatage + texte, enregistrés au clic sur « Recevoir mon code et finaliser » */
 
 /* Mode aperçu : ?apercu=<CLE_APERCU> contourne la vérification SMS et bloque
    tout envoi (Zapier, conversions). Sert à relire la page de bout en bout. */
@@ -1140,7 +1153,7 @@ tracking.canal = (function(){
 var answers = {};
 var T0 = Date.now();   /* horodatage d'ouverture, pour le filtre anti-bot */
 var current = 1;
-var TOTAL = 5;   /* étapes ; la barre atteint 100 % seulement à l'envoi */
+var TOTAL = 6;   /* étapes ; la barre atteint 100 % seulement à l'envoi */
 
 /* ====== RAPPEL DES CHOIX ======
    Les cartes 2 à 5 rappellent ce qui a déjà été répondu. */
@@ -1181,7 +1194,7 @@ function showCard(n){
   document.getElementById('progressFill').style.width = pct + '%';
   document.getElementById('stepLabel').textContent = label;
   document.getElementById('stepPct').textContent = pct + ' %';
-  marquerEtape(n === 'done' ? 6 : n);
+  marquerEtape(n === 'done' ? 7 : n);
   document.getElementById('retourBtn').hidden = (n === 'done' || n <= 1 || n >= 4);   /* pas de retour sur le code postal ni les coordonnées */
   majRecap();
   if (n === 'done' && window.afficherRebond) window.afficherRebond();
@@ -1193,7 +1206,8 @@ function showCard(n){
    L'URL change sans rechargement et SANS ajouter d'entrée à l'historique :
    le bouton Retour du navigateur quitte la page, comme avant.             */
 var URLS = { 1:'/etape1-vehicule', 2:'/etape2-motorisation', 3:'/etape3-budget',
-             4:'/etape4-secteur', 5:'/etape5-coordonnees', done:'/demande-envoyee' };
+             4:'/etape4-secteur', 5:'/etape5-coordonnees', 6:'/etape6-contact',
+             done:'/demande-envoyee' };
 function majUrl(n){
   var chemin = URLS[n];
   if (!chemin) return;
@@ -1208,7 +1222,7 @@ function majUrl(n){
 var etapeMax = 0;
 function etiquette(){
   if (etapeMax === 9) return 'bloque_antibot';
-  if (etapeMax === 6) return 'etape_6_envoye';
+  if (etapeMax === 7) return 'etape_7_envoye';
   return 'etape_' + etapeMax;
 }
 function marquerEtape(n){
@@ -1371,6 +1385,7 @@ function smsReinitialiser(){
   document.getElementById('smsCode').value = '';
   clearInterval(smsTimer);
   otpArreter();
+  majBoutonFinal();
 }
 
 document.getElementById('tel').addEventListener('input', function(){
@@ -1433,9 +1448,7 @@ function smsEnvoyer(bouton){
   /* Les champs au-dessus doivent être remplis : le consentement est donné
      sur une demande complète, et la finalisation automatique a tout ce qu'il faut. */
   var prenom = val('prenom'), nom = val('nom'), email = val('email'), ent = val('entreprise');
-  if (!prenom){ showErr('err4','Merci d\'indiquer votre prénom.'); document.getElementById('prenom').focus(); return; }
-  if (!nom){ showErr('err4','Merci d\'indiquer votre nom.'); document.getElementById('nom').focus(); return; }
-  if (!ent){ showErr('err4','Merci d\'indiquer le nom de votre entreprise.'); document.getElementById('entreprise').focus(); return; }
+  if (!prenom || !nom || !ent){ showCard(5); validerIdentite(); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ showErr('err4','Merci d\'indiquer une adresse mail valide.'); document.getElementById('email').focus(); return; }
 
   var n = telNum();
@@ -1468,7 +1481,7 @@ function smsEnvoyer(bouton){
     var el = document.getElementById('consentTxt');
     consentement = {
       date: new Date().toISOString(),
-      mode: 'Clic sur « Recevoir le code » (vérification SMS)',
+      mode: 'Clic sur « Recevoir mon code et finaliser » (vérification SMS)',
       texte: el ? el.textContent.replace(/\s+/g,' ').trim() : ''
     };
   }
@@ -1485,12 +1498,16 @@ function smsEnvoyer(bouton){
       smsDire('Code envoyé au ' + n + '. Il est valable 10 minutes.', false);
       smsCompteARebours(SMS_ATTENTE);
       document.getElementById('smsSend').disabled = true;
+      if (bouton.id === 'finalBtn') bouton.disabled = false;
+      majBoutonFinal();
       return;
     }
     if (res.statut === 429){
       document.getElementById('smsBox').style.display = 'block';
       smsDire(smsMessage(res, SMS_ERREURS[429]), true);
       smsCompteARebours(smsAttenteRestante(res.data));
+      if (bouton.id === 'finalBtn') bouton.disabled = false;
+      majBoutonFinal();
       return;
     }
     bouton.disabled = false;
@@ -1590,8 +1607,8 @@ function finaliser(){
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ showErr('err4','Merci d\'indiquer une adresse mail valide.'); return; }
   if (!telValide(n)){ showErr('err4','Merci d\'indiquer un numéro mobile français à 10 chiffres, commençant par 06 ou 07.'); return; }
   if (!smsVerifie || n !== smsNumero){
-    showErr('err4','Merci de vérifier votre numéro : cliquez sur « Recevoir le code ».');
-    document.getElementById('smsSend').focus();
+    showErr('err4','Merci de vérifier votre numéro : cliquez sur « Recevoir mon code et finaliser ».');
+    document.getElementById('finalBtn').focus();
     return;
   }
   hideErr('err4');
@@ -1604,7 +1621,42 @@ function finaliser(){
   envoyer();
 }
 
-document.getElementById('finalBtn').addEventListener('click', function(){ finaliser(); });
+/* ====== ÉCRAN A : identité ====== */
+function validerIdentite(){
+  var champs = [['prenom','votre prénom'],['nom','votre nom'],['entreprise','le nom de votre entreprise']];
+  for (var i=0;i<champs.length;i++){
+    if (!val(champs[i][0])){
+      showErr('err5','Merci d\'indiquer ' + champs[i][1] + '.');
+      document.getElementById(champs[i][0]).focus();
+      return false;
+    }
+  }
+  hideErr('err5');
+  return true;
+}
+document.getElementById('identiteBtn').addEventListener('click', function(){
+  if (validerIdentite()) showCard(6);
+});
+
+/* ====== BOUTON UNIQUE ======
+   1er clic : envoie le code SMS. Code affiché : valide le code saisi.
+   Numéro vérifié : la demande part (normalement déjà partie automatiquement). */
+function codeAffiche(){ return document.getElementById('smsBox').style.display === 'block'; }
+function majBoutonFinal(){
+  var b = document.getElementById('finalBtn');
+  if (envoiFait) return;
+  b.textContent = (codeAffiche() && !smsVerifie) ? 'Valider mon code' : CTA_LABEL;
+}
+document.getElementById('finalBtn').addEventListener('click', function(){
+  if (smsVerifie && telNum() === smsNumero){ finaliser(); return; }
+  if (codeAffiche()){
+    var code = val('smsCode').replace(/\D/g,'');
+    if (code.length === 6){ document.getElementById('smsCheck').click(); }
+    else { smsDire('Saisissez le code à 6 chiffres reçu par SMS.', true); document.getElementById('smsCode').focus(); }
+    return;
+  }
+  smsEnvoyer(this);
+});
 
 function envoyer(){
   var btn = document.getElementById('finalBtn');
