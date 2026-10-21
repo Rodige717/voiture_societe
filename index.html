@@ -431,6 +431,30 @@ main { flex:1; padding:22px 20px 56px; }
   content:""; flex-shrink:0; width:6px; height:6px; border-radius:50%;
   background:var(--blue); margin-top:6px;
 }
+/* ERREUR SOUS LE CHAMP */
+.field.ko input { border-color:#c4462a; background:#fffaf7; }
+.field-err { display:none; font-size:13px; font-weight:600; color:#a33a12; margin-top:6px; }
+.field.ko .field-err { display:block; }
+.astuce { font-size:12.5px; color:var(--ink2); line-height:1.45; margin-top:6px; }
+
+/* RAPPEL DU VÉHICULE CHOISI (carte 2) */
+.choix {
+  display:flex; align-items:center; gap:12px;
+  background:var(--blue-light); border:1px solid #d3e0ee; border-radius:12px;
+  padding:6px 14px 6px 6px; margin:-4px 0 16px;
+}
+.choix[hidden] { display:none; }
+.choix img { width:112px; height:auto; flex-shrink:0; border-radius:8px; mix-blend-mode:multiply; }
+.choix div { min-width:0; }
+.choix b { display:block; font-size:16px; font-weight:800; color:var(--blue-dark); letter-spacing:-.015em; }
+.choix span { display:block; font-size:13px; color:var(--ink2); }
+.choix button {
+  margin-top:3px; padding:0; background:none; border:0; cursor:pointer;
+  font-family:inherit; font-size:13px; font-weight:700; color:var(--blue);
+  text-decoration:underline; text-underline-offset:2px;
+}
+.choix button:focus-visible { outline:2px solid var(--blue); outline-offset:2px; border-radius:4px; }
+
 /* ENSUITE */
 .next {
   background:var(--blue-light); border:1px solid #d3e0ee; border-radius:12px;
@@ -644,7 +668,14 @@ footer a { margin:0 8px; }
 
   <section class="card" id="card2">
     <h2>Quelle motorisation vous intéresse ?</h2>
-    <p class="recap" data-recap></p>
+    <div class="choix" id="choixVehicule" hidden>
+      <img id="choixImg" src="" alt="" width="480" height="300">
+      <div>
+        <b id="choixNom"></b>
+        <span>sélectionné</span>
+        <button type="button" id="choixChanger">Changer de modèle</button>
+      </div>
+    </div>
     <button class="opt" data-q="motorisation" data-v="Essence / Diesel">Essence / Diesel</button>
     <button class="opt" data-q="motorisation" data-v="Hybride">Hybride</button>
     <button class="opt" data-q="motorisation" data-v="Électrique">Électrique</button>
@@ -688,16 +719,20 @@ footer a { margin:0 8px; }
         <div class="field">
           <label for="prenom">Prénom</label>
           <input type="text" id="prenom" name="given-name" autocomplete="given-name" placeholder="Julien">
+          <p class="field-err" id="prenom-err">Indiquez votre prénom.</p>
         </div>
         <div class="field">
           <label for="nom">Nom</label>
           <input type="text" id="nom" name="family-name" autocomplete="family-name" placeholder="Martin">
+          <p class="field-err" id="nom-err">Indiquez votre nom.</p>
         </div>
       </div>
 
       <div class="field">
         <label for="entreprise">Nom de l'entreprise</label>
         <input type="text" id="entreprise" name="organization" autocomplete="organization" placeholder="Ex. Martin Plomberie">
+        <p class="astuce">Auto-entrepreneur ? Indiquez votre nom commercial, ou simplement votre nom.</p>
+        <p class="field-err" id="entreprise-err">Indiquez le nom de votre entreprise pour continuer.</p>
       </div>
 
       <button type="button" class="btn" id="identiteBtn">Continuer</button>
@@ -707,14 +742,14 @@ footer a { margin:0 8px; }
   <!-- ===== ÉCRAN B : CONTACT + CODE SMS ===== -->
   <section class="card" id="card6">
     <h2>Où vous envoyer vos devis ?</h2>
-    <p class="sub">Dernière étape : vos offres arrivent par mail et par SMS.</p>
+    <p class="sub">Dernière étape : jusqu'à 3 offres de concessionnaires vous attendent.</p>
     <div class="err" id="err4"></div>
     <form id="formContact" onsubmit="return false;" autocomplete="on">
 
       <div class="field">
         <label for="email">Adresse mail professionnelle</label>
         <input type="email" id="email" name="email" autocomplete="email" placeholder="julien@martin-plomberie.fr">
-        <p class="help">Les concessionnaires retenus peuvent vous y adresser leur proposition.</p>
+        <p class="help">Pour recevoir les offres par écrit.</p>
       </div>
 
       <div class="field">
@@ -723,7 +758,7 @@ footer a { margin:0 8px; }
           <input type="tel" id="tel" name="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="06 12 34 56 78">
           <button type="button" class="btn-sms" id="smsSend" hidden>Recevoir le code</button>
         </div>
-        <p class="help">Nous vérifions votre numéro par SMS : c'est par là que nous vous indiquons les concessionnaires retenus.</p>
+        <p class="help">Code reçu en quelques secondes, proposé directement au-dessus de votre clavier.</p>
 
         <div id="smsBox" style="display:none">
           <label for="smsCode">Code reçu par SMS (6 chiffres)</label>
@@ -738,7 +773,7 @@ footer a { margin:0 8px; }
         <p class="sms-ok" id="smsOk" style="display:none">Numéro vérifié</p>
       </div>
 
-      <p class="consent" id="consentTxt">En cliquant sur «&nbsp;Recevoir mon code et finaliser&nbsp;», j'accepte d'être recontacté par SMS et par téléphone, et que ma demande soit transmise à 3 concessionnaires au maximum, dans les conditions décrites dans les <a href="https://hellodevis.fr/mentions-legales/" target="_blank" rel="noopener">mentions légales</a> et la <a href="https://hellodevis.fr/politique-de-confidentialite-donnees-personnelles/" target="_blank" rel="noopener">politique de confidentialité</a> de Hellodevis.</p>
+      <p class="consent" id="consentTxt">En continuant, j'accepte d'être recontacté par SMS et par téléphone, et que ma demande soit transmise à 3 concessionnaires maximum. <a href="https://hellodevis.fr/mentions-legales/" target="_blank" rel="noopener">Mentions légales</a> · <a href="https://hellodevis.fr/politique-de-confidentialite-donnees-personnelles/" target="_blank" rel="noopener">Confidentialité</a></p>
 
       <button type="button" class="btn" id="finalBtn">Recevoir mon code et finaliser</button>
 
@@ -1241,6 +1276,16 @@ function majRecap(){
   }
 }
 
+function majChoixVehicule(){
+  var bloc = document.getElementById('choixVehicule');
+  var v = answers.vehicule;
+  var btn = v && document.querySelector('#card1 .opt[data-v="' + v + '"] img');
+  if (!btn){ bloc.hidden = true; return; }
+  document.getElementById('choixImg').src = btn.src;
+  document.getElementById('choixNom').textContent = v;
+  bloc.hidden = false;
+}
+
 function showCard(n){
   var cards = document.querySelectorAll('.card');
   for (var i=0;i<cards.length;i++){ cards[i].classList.remove('active'); }
@@ -1261,6 +1306,7 @@ function showCard(n){
   marquerEtape(n === 'done' ? 7 : n);
   document.getElementById('retourBtn').hidden = (n === 'done' || n <= 1 || n >= 4);   /* pas de retour sur le code postal ni les coordonnées */
   majRecap();
+  if (n === 2) majChoixVehicule();
   if (n === 'done' && window.afficherRebond) window.afficherRebond();
   majUrl(n);
   window.scrollTo(0, 0);   /* instantané : le défilement animé faisait rater les premiers appuis */
@@ -1328,6 +1374,11 @@ var VEHICULES = {
   }
   showCard(2);
 })();
+
+document.getElementById('choixChanger').addEventListener('click', function(){
+  pister('vehicule_change', { depuis: answers.vehicule || '' });
+  showCard(1);
+});
 
 /* ====== RETOUR À L'ÉTAPE PRÉCÉDENTE ======
    Les réponses déjà données restent sélectionnées. */
@@ -1686,18 +1737,28 @@ function finaliser(){
 }
 
 /* ====== ÉCRAN A : identité ====== */
+/* Chaque champ manquant est signalé sous lui-même, visible sans remonter. */
 function validerIdentite(){
-  var champs = [['prenom','votre prénom'],['nom','votre nom'],['entreprise','le nom de votre entreprise']];
-  for (var i=0;i<champs.length;i++){
-    if (!val(champs[i][0])){
-      showErr('err5','Merci d\'indiquer ' + champs[i][1] + '.');
-      document.getElementById(champs[i][0]).focus();
-      return false;
-    }
+  var ids = ['prenom','nom','entreprise'], manquants = [];
+  for (var i=0;i<ids.length;i++){
+    var champ = document.getElementById(ids[i]).parentNode;
+    var vide = !val(ids[i]);
+    champ.classList.toggle('ko', vide);
+    if (vide) manquants.push(ids[i]);
   }
   hideErr('err5');
+  if (manquants.length){
+    document.getElementById(manquants[0]).focus();
+    pister('identite_bloquee', { champs: manquants.join(',') });
+    return false;
+  }
   return true;
 }
+['prenom','nom','entreprise'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', function(){
+    if (this.value.trim()) this.parentNode.classList.remove('ko');
+  });
+});
 document.getElementById('identiteBtn').addEventListener('click', function(){
   if (validerIdentite()) showCard(6);
 });
