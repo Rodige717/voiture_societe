@@ -151,7 +151,7 @@ main { flex:1; padding:22px 20px 56px; }
 }
 .progress-bar { height:4px; background:var(--border); border-radius:100px; overflow:hidden; }
 .progress-fill {
-  height:100%; width:17%; background:var(--blue);
+  height:100%; width:14%; background:var(--blue);
   border-radius:100px; transition:width .35s cubic-bezier(.4,0,.2,1);
 }
 
@@ -571,11 +571,11 @@ main { flex:1; padding:22px 20px 56px; }
   letter-spacing:.01em;
   display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;
 }
-#apercuFin {
+#apercuFin, #apercuReset {
   font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer;
   background:#fff; color:#7a3e00; border:none; border-radius:100px; padding:5px 12px;
 }
-#apercuFin:hover { background:#ffe9cc; }
+#apercuFin:hover, #apercuReset:hover { background:#ffe9cc; }
 body:has(#apercuBandeau) footer { padding-bottom:56px; }
 
 /* CONSENTEMENT */
@@ -649,8 +649,8 @@ footer a { margin:0 8px; }
   <!-- ===== FORMULAIRE ===== -->
   <div id="progressWrap">
     <div class="progress-head">
-      <span id="stepLabel">Étape 1 sur 5</span>
-      <span id="stepPct">17 %</span>
+      <span id="stepLabel">Étape 1 sur 6</span>
+      <span id="stepPct">14 %</span>
     </div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
     <button type="button" class="retour" id="retourBtn" hidden>‹ Retour</button>
@@ -783,10 +783,6 @@ footer a { margin:0 8px; }
       </div>
 
 
-      <div class="next">
-        <p><strong>Et ensuite ?</strong> Un SMS vous est transmis en moins de 24 h pour vous indiquer quels concessionnaires vont revenir vers vous avec un véhicule correspondant à vos critères.</p>
-        <p>Votre demande peut être transmise à jusqu'à 3 concessionnaires, afin de vous permettre de comparer leurs propositions et d'échanger avec eux sur votre projet d'achat.</p>
-      </div>
     </form>
   </section>
 
@@ -1121,6 +1117,7 @@ footer a { margin:0 8px; }
 
 <script>
 /* ====== CONFIG ====== */
+var URL_DEPART = location.href;   /* adresse d'arrivée, avant le changement d'URL par étape */
 var ZAPIER_WEBHOOK = 'https://hooks.zapier.com/hooks/catch/12217356/418chwr/';
 var FORMULAIRE = 'LP Véhicule de société B2B';
 
@@ -1166,7 +1163,11 @@ if (APERCU) {
     lien.type = 'button'; lien.id = 'apercuFin';
     lien.textContent = 'Aller à la fin';
     lien.addEventListener('click', apercuFin);
-    b.appendChild(t); b.appendChild(lien);
+    var reset = document.createElement('button');
+    reset.type = 'button'; reset.id = 'apercuReset';
+    reset.textContent = 'Recommencer';
+    reset.addEventListener('click', function(){ location.replace(URL_DEPART); });
+    b.appendChild(t); b.appendChild(reset); b.appendChild(lien);
     document.body.appendChild(b);
   })();
 }
