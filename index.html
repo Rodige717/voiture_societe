@@ -301,6 +301,39 @@ main { flex:1; padding:22px 20px 56px; }
 #manut .fin b { display:block; font-size:16px; font-weight:800; color:#0d4f2c; margin-bottom:6px; }
 #manut .fin span { font-size:14px; color:#2d6b48; line-height:1.5; }
 
+/* REBOND SÉCURITÉ */
+#securite { display:none; margin-top:14px; }
+#securite.on { display:block; animation:in .35s ease-out; }
+#securite .card {
+  display:block; margin-top:0;
+  background:linear-gradient(180deg,#efedf9 0%,#e5e1f5 100%);
+  border-color:#c9c1ea;
+}
+#securite h3 { font-size:18px; font-weight:800; letter-spacing:-.025em; line-height:1.3; color:#352a72; }
+#securite .intro { font-size:14px; color:#544a8c; line-height:1.55; margin:8px 0 6px; }
+#securite .gratuit {
+  display:inline-block; font-size:12.5px; font-weight:700; color:#352a72;
+  background:rgba(255,255,255,.75); border:1px solid #c9c1ea;
+  border-radius:100px; padding:5px 11px; margin-bottom:16px;
+}
+#securite .nbq {
+  display:inline-block; font-size:12.5px; font-weight:800; color:#fff; background:#5a4bb0;
+  border-radius:100px; padding:5px 11px; margin:0 0 16px 6px;
+}
+#securite .opt { background:rgba(255,255,255,.9); border-color:#d6d0ef; padding:13px 14px; font-size:15px; }
+#securite .opt:hover, #securite .opt.selected { background:#fff; border-color:#5a4bb0; }
+#securite .q { display:none; }
+#securite .q.on { display:block; animation:in .25s ease-out; }
+#securite .q > p { font-size:15px; font-weight:700; margin-bottom:10px; color:#352a72; }
+#securite .respire { animation-name:respire-vio; }
+@keyframes respire-vio {
+  0%, 100% { transform:none; box-shadow:0 0 0 0 rgba(90,75,176,0); }
+  50%      { transform:translateY(-2px); box-shadow:0 0 0 5px rgba(90,75,176,.12); }
+}
+.securite-fin { text-align:center; padding:6px 0; }
+.securite-fin b { display:block; font-size:16px; font-weight:800; color:#352a72; margin-bottom:6px; }
+.securite-fin span { font-size:14px; color:#544a8c; line-height:1.5; }
+
 /* REBOND ÉNERGIE */
 #energie { display:none; margin-top:14px; }
 #energie.on { display:block; animation:in .35s ease-out; }
@@ -797,6 +830,35 @@ footer a { margin:0 8px; }
     </section>
   </div>
 
+  <!-- ===== REBOND SÉCURITÉ ===== -->
+  <div id="securite">
+    <section class="card">
+      <h3>Vos locaux sont-ils bien protégés ?</h3>
+      <p class="intro">Alarme ou vidéosurveillance : recevez les devis d'installateurs de votre secteur. Vos coordonnées sont déjà renseignées.</p>
+      <span class="gratuit">Gratuit et sans engagement</span><span class="nbq">2 questions</span>
+
+      <div class="q on" data-q="1">
+        <p>Quel type de local souhaitez-vous sécuriser ?</p>
+        <button class="opt" data-s="local" data-v="Commerce / Magasin">Commerce / Magasin</button>
+        <button class="opt" data-s="local" data-v="Bureau / Cabinet">Bureau / Cabinet</button>
+        <button class="opt" data-s="local" data-v="Entrepôt / Atelier">Entrepôt / Atelier</button>
+        <button class="opt" data-s="local" data-v="Autre type de local">Autre type de local</button>
+      </div>
+
+      <div class="q" data-q="2">
+        <p>Quel est votre besoin ?</p>
+        <button class="opt" data-s="besoin" data-v="Alarme anti intrusion">Alarme anti intrusion</button>
+        <button class="opt" data-s="besoin" data-v="Vidéosurveillance">Vidéosurveillance</button>
+        <button class="opt" data-s="besoin" data-v="Alarme et vidéosurveillance">Alarme et vidéosurveillance</button>
+      </div>
+
+      <div class="q securite-fin" data-q="3">
+        <b>C'est noté</b>
+        <span>Vous recevez par SMS les coordonnées des installateurs sélectionnés pour votre besoin.</span>
+      </div>
+    </section>
+  </div>
+
   <!-- ===== REBOND MANUTENTION ===== -->
   <div id="manut">
     <section class="card">
@@ -1081,6 +1143,8 @@ var ZAPIER_ENERGIE     = 'https://hooks.zapier.com/hooks/catch/12217356/4mevcxw/
 var ZAPIER_MANUTENTION = 'https://hooks.zapier.com/hooks/catch/12217356/4mcoq2k/';
 var ID_FORM_MANUTENTION= '8153604927381560';
 var ID_FORM_ENERGIE    = '6204915738260194';
+var ZAPIER_SECURITE    = 'https://hooks.zapier.com/hooks/catch/12217356/41clbaz/';
+var ID_FORM_SECURITE   = '3713979055060968';
 
 /* Chiffres de confiance : remplir avec vos VRAIS chiffres. Laisser vide = bloc masqué */
 var CHIFFRES = { pros: '', partenaires: '' };
@@ -1891,6 +1955,7 @@ if (window.clarity) {
 
     /* L'assurance est prise : on propose alors les deux autres, l'une après l'autre. */
     setTimeout(function(){
+      if (window.afficherSecurite) window.afficherSecurite();
       if (window.afficherManut) window.afficherManut();
       if (window.afficherEnergie) window.afficherEnergie();
     }, 250);
@@ -2041,6 +2106,67 @@ function compter(el, cible, suffixe){
     var nb = document.getElementById('manutNb');
     if (nb) { nb.textContent = '0 à 6 questions'; compter(nb, 4, ' à 6 questions'); }
     setTimeout(function(){ respirer(bloc); }, 500);
+  };
+})();
+
+/* ====== REBOND SÉCURITÉ ====== */
+(function(){
+  var bloc = document.getElementById('securite');
+  var r = { local:'', besoin:'' }, envoye = false;
+  var EV = { 1:'securite_1_local', 2:'securite_2_besoin', 3:'securite_envoye' };
+  function voir(n){
+    var qs = bloc.querySelectorAll('.q');
+    for (var i=0;i<qs.length;i++) qs[i].classList.toggle('on', qs[i].getAttribute('data-q') === String(n));
+    if (EV[n] && n !== 3) pister(EV[n]);
+  }
+  var opts = bloc.querySelectorAll('.opt[data-s]');
+  for (var i=0;i<opts.length;i++){
+    opts[i].addEventListener('click', function(){
+      var champ = this.getAttribute('data-s'), v = this.getAttribute('data-v');
+      var sib = this.parentNode.querySelectorAll('.opt');
+      for (var j=0;j<sib.length;j++) sib[j].classList.remove('selected');
+      this.classList.add('selected');
+      r[champ] = v;
+      if (champ === 'local')  setTimeout(function(){ voir(2); }, 180);
+      if (champ === 'besoin') setTimeout(envoyerSecurite, 180);
+    });
+  }
+  function envoyerSecurite(){
+    if (envoye) return;
+    envoye = true;
+    voir(3);
+    var payload = {
+      id_form: ID_FORM_SECURITE,
+      lead_id: makeLeadId(),
+      lead_parent: answers.lead_id || '',
+      origine: 'rebond LP vehicule societe',
+      type_local: r.local,
+      besoin: r.besoin,
+      prenom: answers.prenom || '',
+      nom: answers.nom || '',
+      email: answers.email || '',
+      telephone: answers.telephone || '',
+      entreprise: answers.entreprise || '',
+      code_postal: answers.code_postal || '',
+      canal: 'TYP_' + tracking.canal,
+      source: 'TYP_' + tracking.canal,
+      formulaire: 'Rebond Sécurité',
+      date: new Date().toISOString(),
+      page_url: window.location.href
+    };
+    if (ZAPIER_SECURITE && !APERCU){
+      fetch(ZAPIER_SECURITE, { method:'POST', mode:'no-cors',
+        headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) }).catch(function(){});
+    }
+    propriete('rebond_securite', 'envoye');
+    pister('securite_envoye', { type_local: r.local, besoin: r.besoin });
+  }
+  window.afficherSecurite = function(){
+    if (bloc.classList.contains('on')) return;
+    bloc.classList.add('on');
+    compter(bloc.querySelector('.nbq'), 2, ' questions');
+    setTimeout(function(){ respirer(bloc); }, 500);
+    pister(EV[1]);
   };
 })();
 
