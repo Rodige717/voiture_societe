@@ -435,12 +435,26 @@ main { flex:1; padding:22px 20px 56px; }
 .field.ko input { border-color:#c4462a; background:#fffaf7; }
 .field-err { display:none; font-size:13px; font-weight:600; color:#a33a12; margin-top:6px; }
 .field.ko .field-err { display:block; }
-.astuce-lien {
-  display:inline-block; margin-top:7px; padding:2px 0; background:none; border:0; cursor:pointer;
-  font-family:inherit; font-size:13px; font-weight:700; color:var(--blue); text-align:left;
-  text-decoration:underline; text-underline-offset:2px;
+.field label.case {
+  display:flex; align-items:center; gap:12px; margin:10px 0 0; cursor:pointer;
+  border:1.5px solid var(--border); border-radius:12px; padding:12px 14px;
+  font-size:15px; font-weight:500; color:var(--ink); line-height:1.35;
+  transition:border-color .15s, background .15s;
 }
-.astuce-lien:focus-visible { outline:2px solid var(--blue); outline-offset:2px; border-radius:4px; }
+.case input {
+  appearance:none; -webkit-appearance:none; flex-shrink:0; margin:0; cursor:pointer;
+  width:22px; height:22px; border:2px solid #9aa6b4; border-radius:6px; background:var(--white);
+  display:grid; place-content:center; transition:background .15s, border-color .15s;
+}
+.case input::after {
+  content:""; width:11px; height:6px; margin-top:-3px;
+  border:solid #fff; border-width:0 0 2.5px 2.5px; transform:rotate(-45deg); opacity:0;
+}
+.case input:checked { background:var(--blue); border-color:var(--blue); }
+.case input:checked::after { opacity:1; }
+.case input:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+.case:has(input:checked) { border-color:var(--blue); background:var(--blue-light); }
+.field input[readonly] { background:var(--bg); color:var(--ink2); }
 
 /* RAPPEL DU VÉHICULE CHOISI (carte 2) */
 .choix {
@@ -735,10 +749,10 @@ footer a { margin:0 8px; }
       </div>
 
       <div class="field">
-        <label for="entreprise">Nom de l'entreprise</label>
-        <input type="text" id="entreprise" name="organization" autocomplete="organization" placeholder="Ex. Martin Plomberie">
-        <button type="button" class="astuce-lien" id="entrepriseNom">Pas de nom d'entreprise ? Utiliser mon nom</button>
-        <p class="field-err" id="entreprise-err">Indiquez le nom de votre entreprise, ou utilisez votre nom.</p>
+        <label for="entreprise">Nom de votre entreprise ou activité</label>
+        <input type="text" id="entreprise" name="organization" autocomplete="organization" placeholder="Martin Plomberie">
+        <label class="case" for="aMonNom"><input type="checkbox" id="aMonNom"><span>Je suis à mon nom (pas de nom d'entreprise)</span></label>
+        <p class="field-err" id="entreprise-err">Indiquez le nom de votre entreprise ou activité, ou cochez la case.</p>
       </div>
 
       <button type="button" class="btn" id="identiteBtn">Continuer</button>
@@ -1750,6 +1764,7 @@ function finaliser(){
 /* ====== ÉCRAN A : identité ====== */
 /* Chaque champ manquant est signalé sous lui-même, visible sans remonter. */
 function validerIdentite(){
+  remplirAMonNom();
   var ids = ['prenom','nom','entreprise'], manquants = [];
   for (var i=0;i<ids.length;i++){
     var champ = document.getElementById(ids[i]).parentNode;
@@ -1765,18 +1780,27 @@ function validerIdentite(){
   }
   return true;
 }
-/* « Utiliser mon nom » : remplit l'entreprise avec prénom + nom en un toucher. */
-document.getElementById('entrepriseNom').addEventListener('click', function(){
-  var nomComplet = (val('prenom') + ' ' + val('nom')).trim();
-  if (!nomComplet){
-    ['prenom','nom'].forEach(function(id){ document.getElementById(id).parentNode.classList.add('ko'); });
-    document.getElementById('prenom').focus();
-    return;
+/* Case « Je suis à mon nom » : l'entreprise prend prénom + nom et se verrouille. */
+var champEnt = document.getElementById('entreprise');
+var caseNom = document.getElementById('aMonNom');
+function remplirAMonNom(){
+  if (!caseNom.checked) return;
+  champEnt.value = (val('prenom') + ' ' + val('nom')).trim();
+  if (champEnt.value) champEnt.parentNode.classList.remove('ko');
+}
+caseNom.addEventListener('change', function(){
+  if (this.checked){
+    champEnt.readOnly = true;
+    remplirAMonNom();
+    pister('entreprise_a_mon_nom');
+  } else {
+    champEnt.readOnly = false;
+    champEnt.value = '';
+    champEnt.focus();
   }
-  var champ = document.getElementById('entreprise');
-  champ.value = nomComplet;
-  champ.parentNode.classList.remove('ko');
-  pister('entreprise_nom_utilise');
+});
+['prenom','nom'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', remplirAMonNom);
 });
 
 ['prenom','nom','entreprise'].forEach(function(id){
@@ -1829,6 +1853,7 @@ function envoyer(){
     telephone: answers.telephone || '',
     telephone_e164: answers.telephone_e164 || '',
     telephone_verifie: answers.telephone_verifie || 'non',
+    a_son_nom: caseNom.checked ? 'oui' : 'non',
     type_envoi: 'nouveau_lead',
     date_consentement: consentement ? consentement.date : '',
     mode_consentement: consentement ? consentement.mode : '',
