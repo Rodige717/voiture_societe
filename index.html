@@ -435,7 +435,12 @@ main { flex:1; padding:22px 20px 56px; }
 .field.ko input { border-color:#c4462a; background:#fffaf7; }
 .field-err { display:none; font-size:13px; font-weight:600; color:#a33a12; margin-top:6px; }
 .field.ko .field-err { display:block; }
-.astuce { font-size:12.5px; color:var(--ink2); line-height:1.45; margin-top:6px; }
+.astuce-lien {
+  display:inline-block; margin-top:7px; padding:2px 0; background:none; border:0; cursor:pointer;
+  font-family:inherit; font-size:13px; font-weight:700; color:var(--blue); text-align:left;
+  text-decoration:underline; text-underline-offset:2px;
+}
+.astuce-lien:focus-visible { outline:2px solid var(--blue); outline-offset:2px; border-radius:4px; }
 
 /* RAPPEL DU VÉHICULE CHOISI (carte 2) */
 .choix {
@@ -732,8 +737,8 @@ footer a { margin:0 8px; }
       <div class="field">
         <label for="entreprise">Nom de l'entreprise</label>
         <input type="text" id="entreprise" name="organization" autocomplete="organization" placeholder="Ex. Martin Plomberie">
-        <p class="astuce">Auto-entrepreneur ? Indiquez votre nom commercial, ou simplement votre nom.</p>
-        <p class="field-err" id="entreprise-err">Indiquez le nom de votre entreprise pour continuer.</p>
+        <button type="button" class="astuce-lien" id="entrepriseNom">Pas de nom d'entreprise ? Utiliser mon nom</button>
+        <p class="field-err" id="entreprise-err">Indiquez le nom de votre entreprise, ou utilisez votre nom.</p>
       </div>
 
       <button type="button" class="btn" id="identiteBtn">Continuer</button>
@@ -1760,6 +1765,20 @@ function validerIdentite(){
   }
   return true;
 }
+/* « Utiliser mon nom » : remplit l'entreprise avec prénom + nom en un toucher. */
+document.getElementById('entrepriseNom').addEventListener('click', function(){
+  var nomComplet = (val('prenom') + ' ' + val('nom')).trim();
+  if (!nomComplet){
+    ['prenom','nom'].forEach(function(id){ document.getElementById(id).parentNode.classList.add('ko'); });
+    document.getElementById('prenom').focus();
+    return;
+  }
+  var champ = document.getElementById('entreprise');
+  champ.value = nomComplet;
+  champ.parentNode.classList.remove('ko');
+  pister('entreprise_nom_utilise');
+});
+
 ['prenom','nom','entreprise'].forEach(function(id){
   document.getElementById(id).addEventListener('input', function(){
     if (this.value.trim()) this.parentNode.classList.remove('ko');
