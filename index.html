@@ -325,6 +325,9 @@ main { flex:1; padding:22px 20px 56px; }
 #securite .q { display:none; }
 #securite .q.on { display:block; animation:in .25s ease-out; }
 #securite .q > p { font-size:15px; font-weight:700; margin-bottom:10px; color:#352a72; }
+#securite .field input { border-color:#d6d0ef; }
+#securite .field input:focus { border-color:#5a4bb0; }
+#securite .btn { background:#5a4bb0; }
 #securite .respire { animation-name:respire-vio; }
 @keyframes respire-vio {
   0%, 100% { transform:none; box-shadow:0 0 0 0 rgba(90,75,176,0); }
@@ -894,6 +897,15 @@ footer a { margin:0 8px; }
         <button class="opt" data-s="local" data-v="Bureau / Cabinet">Bureau / Cabinet</button>
         <button class="opt" data-s="local" data-v="Entrepôt / Atelier">Entrepôt / Atelier</button>
         <button class="opt" data-s="local" data-v="Autre type de local">Autre type de local</button>
+      </div>
+
+      <div class="q" data-q="1b">
+        <p>Précisez le type de local</p>
+        <div class="field">
+          <input type="text" id="secLocalAutre" maxlength="80" placeholder="Ex. restaurant, garage…" autocomplete="off">
+          <p class="field-err">Indiquez le type de local pour continuer.</p>
+        </div>
+        <button class="btn" type="button" id="secLocalSuite">Continuer</button>
       </div>
 
       <div class="q" data-q="2">
@@ -2054,7 +2066,7 @@ if (window.clarity) {
       date: new Date().toISOString(),
       page_url: window.location.href
     };
-    if (ZAPIER_ASSURANCE){
+    if (ZAPIER_ASSURANCE && !APERCU){
       fetch(ZAPIER_ASSURANCE, {
         method:'POST', mode:'no-cors',
         headers:{ 'Content-Type':'application/json' },
@@ -2202,7 +2214,7 @@ function compter(el, cible, suffixe){
       date: new Date().toISOString(),
       page_url: window.location.href
     };
-    if (ZAPIER_MANUTENTION){
+    if (ZAPIER_MANUTENTION && !APERCU){
       fetch(ZAPIER_MANUTENTION, { method:'POST', mode:'no-cors',
         headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) }).catch(function(){});
     }
@@ -2223,8 +2235,8 @@ function compter(el, cible, suffixe){
 /* ====== REBOND SÉCURITÉ ====== */
 (function(){
   var bloc = document.getElementById('securite');
-  var r = { local:'', besoin:'' }, envoye = false;
-  var EV = { 1:'securite_1_local', 2:'securite_2_besoin', 3:'securite_envoye' };
+  var r = { local:'', precision:'', besoin:'' }, envoye = false;
+  var EV = { 1:'securite_1_local', '1b':'securite_1b_precision', 2:'securite_2_besoin', 3:'securite_envoye' };
   function voir(n){
     var qs = bloc.querySelectorAll('.q');
     for (var i=0;i<qs.length;i++) qs[i].classList.toggle('on', qs[i].getAttribute('data-q') === String(n));
@@ -2238,10 +2250,30 @@ function compter(el, cible, suffixe){
       for (var j=0;j<sib.length;j++) sib[j].classList.remove('selected');
       this.classList.add('selected');
       r[champ] = v;
-      if (champ === 'local')  setTimeout(function(){ voir(2); }, 180);
+      if (champ === 'local'){
+        r.precision = '';
+        var autre = (v === 'Autre type de local');
+        setTimeout(function(){
+          voir(autre ? '1b' : 2);
+          if (autre) document.getElementById('secLocalAutre').focus();
+        }, 180);
+      }
       if (champ === 'besoin') setTimeout(envoyerSecurite, 180);
     });
   }
+  var champAutre = document.getElementById('secLocalAutre');
+  document.getElementById('secLocalSuite').addEventListener('click', function(){
+    var v = champAutre.value.trim();
+    champAutre.parentNode.classList.toggle('ko', !v);
+    if (!v){ champAutre.focus(); return; }
+    r.precision = v;
+    voir(2);
+  });
+  champAutre.addEventListener('input', function(){ if (this.value.trim()) this.parentNode.classList.remove('ko'); });
+  champAutre.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){ e.preventDefault(); e.stopPropagation(); document.getElementById('secLocalSuite').click(); }
+  });
+
   function envoyerSecurite(){
     if (envoye) return;
     envoye = true;
@@ -2252,6 +2284,7 @@ function compter(el, cible, suffixe){
       lead_parent: answers.lead_id || '',
       origine: 'rebond LP vehicule societe',
       type_local: r.local,
+      type_local_precision: r.precision,
       besoin: r.besoin,
       prenom: answers.prenom || '',
       nom: answers.nom || '',
@@ -2349,7 +2382,7 @@ function compter(el, cible, suffixe){
       date: new Date().toISOString(),
       page_url: window.location.href
     };
-    if (ZAPIER_ENERGIE && eligible){
+    if (ZAPIER_ENERGIE && eligible && !APERCU){
       fetch(ZAPIER_ENERGIE, { method:'POST', mode:'no-cors',
         headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) }).catch(function(){});
     }
