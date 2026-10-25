@@ -2283,8 +2283,7 @@ function compter(el, cible, suffixe){
       lead_id: makeLeadId(),
       lead_parent: answers.lead_id || '',
       origine: 'rebond LP vehicule societe',
-      type_local: r.local,
-      type_local_precision: r.precision,
+      type_local: r.precision || r.local,   /* « Autre » : la réponse libre remplace le libellé */
       besoin: r.besoin,
       prenom: answers.prenom || '',
       nom: answers.nom || '',
