@@ -896,6 +896,16 @@ footer a { margin:0 8px; }
         <button class="opt" data-s="local" data-v="Commerce / Magasin">Commerce / Magasin</button>
         <button class="opt" data-s="local" data-v="Bureau / Cabinet">Bureau / Cabinet</button>
         <button class="opt" data-s="local" data-v="Entrepôt / Atelier">Entrepôt / Atelier</button>
+        <button class="opt" data-s="local" data-v="Autre type de local">Autre type de local</button>
+      </div>
+
+      <div class="q" data-q="1b">
+        <p>Précisez le type de local</p>
+        <div class="field">
+          <input type="text" id="secLocalAutre" maxlength="80" placeholder="Ex. restaurant, garage…" autocomplete="off">
+          <p class="field-err">Indiquez le type de local pour continuer.</p>
+        </div>
+        <button class="btn" type="button" id="secLocalSuite">Continuer</button>
       </div>
 
       <div class="q" data-q="2">
@@ -2225,8 +2235,8 @@ function compter(el, cible, suffixe){
 /* ====== REBOND SÉCURITÉ ====== */
 (function(){
   var bloc = document.getElementById('securite');
-  var r = { local:'', besoin:'' }, envoye = false;
-  var EV = { 1:'securite_1_local', 2:'securite_2_besoin', 3:'securite_envoye' };
+  var r = { local:'', precision:'', besoin:'' }, envoye = false;
+  var EV = { 1:'securite_1_local', '1b':'securite_1b_precision', 2:'securite_2_besoin', 3:'securite_envoye' };
   function voir(n){
     var qs = bloc.querySelectorAll('.q');
     for (var i=0;i<qs.length;i++) qs[i].classList.toggle('on', qs[i].getAttribute('data-q') === String(n));
@@ -2240,10 +2250,30 @@ function compter(el, cible, suffixe){
       for (var j=0;j<sib.length;j++) sib[j].classList.remove('selected');
       this.classList.add('selected');
       r[champ] = v;
-      if (champ === 'local')  setTimeout(function(){ voir(2); }, 180);
+      if (champ === 'local'){
+        r.precision = '';
+        var autre = (v === 'Autre type de local');
+        setTimeout(function(){
+          voir(autre ? '1b' : 2);
+          if (autre) document.getElementById('secLocalAutre').focus();
+        }, 180);
+      }
       if (champ === 'besoin') setTimeout(envoyerSecurite, 180);
     });
   }
+  var champAutre = document.getElementById('secLocalAutre');
+  document.getElementById('secLocalSuite').addEventListener('click', function(){
+    var v = champAutre.value.trim();
+    champAutre.parentNode.classList.toggle('ko', !v);
+    if (!v){ champAutre.focus(); return; }
+    r.precision = v;
+    voir(2);
+  });
+  champAutre.addEventListener('input', function(){ if (this.value.trim()) this.parentNode.classList.remove('ko'); });
+  champAutre.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){ e.preventDefault(); e.stopPropagation(); document.getElementById('secLocalSuite').click(); }
+  });
+
   function envoyerSecurite(){
     if (envoye) return;
     envoye = true;
@@ -2253,7 +2283,7 @@ function compter(el, cible, suffixe){
       lead_id: makeLeadId(),
       lead_parent: answers.lead_id || '',
       origine: 'rebond LP vehicule societe',
-      type_local: r.local,
+      type_local: r.precision || r.local,   /* « Autre » : la réponse libre remplace le libellé */
       besoin: r.besoin,
       prenom: answers.prenom || '',
       nom: answers.nom || '',
