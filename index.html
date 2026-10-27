@@ -1277,13 +1277,11 @@ tracking.canal = (function(){
   if (p('oppref')) return 'GPT';          /* identifiant de clic ChatGPT Ads */
   if (tracking.fbclid) return 'FBA';
   if (tracking.gclid) return 'ADW';       /* identifiant de clic Google Ads */
-  if (src) return tracking.utm_source.toUpperCase();
   var r = tracking.referrer.toLowerCase();
   if (r.indexOf('chatgpt.com') > -1 || r.indexOf('openai.com') > -1) return 'GPT';
   if (r.indexOf('facebook.com') > -1 || r.indexOf('instagram.com') > -1) return 'FBA';
   if (r.indexOf('google.') > -1) return 'ADW';   /* Google naturel : regroupé avec Google Ads pour la modération */
-  if (r) return 'REF';
-  return 'DIRECT';
+  return 'FBA';   /* source non identifiée (direct, autre site, utm inconnu) : FBA, seuls FBA / GPT / ADW existent */
 })();
 
 var answers = {};
