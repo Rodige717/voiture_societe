@@ -1267,21 +1267,29 @@ var META_PLACEMENTS = ['fba','fb','ig','an','th','msg','fbreels','igreels',
                        'audience_network','messenger','threads','whatsapp','wa'];
 tracking.canal = (function(){
   var src = tracking.utm_source.toLowerCase();
-  if (src) {
-    if (src === 'gpt' || src.indexOf('chatgpt') > -1 || src.indexOf('openai') > -1) return 'GPT';
-    if (src === 'adw' || src === 'gads' || src.indexOf('google') > -1 || src.indexOf('adwords') > -1) return 'ADW';
-    if (META_PLACEMENTS.indexOf(src) > -1 ||
-        src.indexOf('facebook') > -1 || src.indexOf('instagram') > -1 || src.indexOf('meta') > -1 ||
-        src.indexOf('audience') > -1 || src.indexOf('threads') > -1) return 'FBA';
-  }
-  if (p('oppref')) return 'GPT';          /* identifiant de clic ChatGPT Ads */
-  if (tracking.fbclid) return 'FBA';
-  if (tracking.gclid) return 'ADW';       /* identifiant de clic Google Ads */
-  var r = tracking.referrer.toLowerCase();
+  var r   = tracking.referrer.toLowerCase();
+
+  /* Hôte du référent. On le compare en entier, et non par sous-chaîne :
+     « google. » attrapait aussi mail.google.com, drive.google.com, etc.,
+     et un lien ouvert depuis une boîte Gmail était compté en Google Ads.
+     Un lien venant d'un autre site n'est pas Google : il part en FBA. */
+  var hote = '';
+  try { hote = new URL(tracking.referrer).hostname.toLowerCase(); } catch(e) { hote = ''; }
+  var GOOGLE_RECHERCHE = /^(www\.)?google\.[a-z]{2,}(\.[a-z]{2,})?$/;
+
+  /* ChatGPT : source, identifiant de clic ChatGPT Ads, ou site référent */
+  if (src === 'gpt' || src.indexOf('chatgpt') > -1 || src.indexOf('openai') > -1) return 'GPT';
+  if (p('oppref')) return 'GPT';
   if (r.indexOf('chatgpt.com') > -1 || r.indexOf('openai.com') > -1) return 'GPT';
-  if (r.indexOf('facebook.com') > -1 || r.indexOf('instagram.com') > -1) return 'FBA';
-  if (r.indexOf('google.') > -1) return 'ADW';   /* Google naturel : regroupé avec Google Ads pour la modération */
-  return 'FBA';   /* source non identifiée (direct, autre site, utm inconnu) : FBA, seuls FBA / GPT / ADW existent */
+
+  /* Google, publicité comme naturel */
+  if (src === 'adw' || src === 'gads' || src.indexOf('google') > -1 || src.indexOf('adwords') > -1) return 'ADW';
+  if (tracking.gclid) return 'ADW';
+  if (GOOGLE_RECHERCHE.test(hote)) return 'ADW';
+
+  /* Tout le reste : accès direct, autre site référent, utm_source inconnu,
+     placements Meta (fb, ig, an, th, msg), fbclid. */
+  return 'FBA';
 })();
 
 var answers = {};
