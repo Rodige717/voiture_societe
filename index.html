@@ -2085,7 +2085,7 @@ if (window.clarity) {
     /* L'assurance est prise : on propose alors les deux autres, l'une après l'autre. */
     setTimeout(function(){
       if (window.afficherSecurite) window.afficherSecurite();
-      if (window.afficherManut) window.afficherManut();
+      /* Manutention (chariot élévateur) retirée le 03/11 : bloc conservé mais plus affiché. */
       if (window.afficherEnergie) window.afficherEnergie();
     }, 250);
   }
