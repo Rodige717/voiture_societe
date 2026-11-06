@@ -29,6 +29,7 @@ var GADS_ID         = 'AW-11139707353';
 var GADS_CONVERSION = 'AW-11139707353/cP1XCO_81YMdENnj6b8p';
 var FB_PIXEL_ID     = '502969573835971';
 var OAI_PIXEL_ID    = '9rk6Hd975fYzVJVPc4PQSc';
+var TIKTOK_PIXEL_ID = 'CEDU11RC77UA05ON7BAG';
 var CLARITY_ID      = 'yqwwm5yf1s';   /* Microsoft Clarity : enregistrement des sessions */
 var POSTHOG_KEY     = 'phc_yXPEaGfcuwo8uAjUpSaGPPqipoGo7NvMkqzuv2EqKDGa';
 var POSTHOG_HOST    = 'https://eu.i.posthog.com';   /* hébergement européen */
@@ -54,6 +55,22 @@ function pister(nom, props){
   if (window.posthog && posthog.capture) { try { posthog.capture(nom, props || {}); } catch(e) {} }
   else { __phFile.push([nom, props || {}]); }
 }
+/* Empreinte SHA-256 en hexadécimal, pour la correspondance avancée TikTok.
+   TikTok exige que l'e-mail et le téléphone soient hachés côté navigateur :
+   aucune donnée en clair ne quitte la page. crypto.subtle n'existe qu'en
+   HTTPS ; ailleurs la promesse renvoie une chaîne vide et le champ est omis. */
+function empreinte(texte){
+  try {
+    if (!texte || !window.crypto || !crypto.subtle || !window.TextEncoder) return Promise.resolve('');
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(texte))
+      .then(function(buf){
+        var o = Array.prototype.slice.call(new Uint8Array(buf));
+        return o.map(function(x){ return ('00' + x.toString(16)).slice(-2); }).join('');
+      })
+      .catch(function(){ return ''; });
+  } catch(e) { return Promise.resolve(''); }
+}
+
 function propriete(cle, valeur){
   if (window.clarity) { try { window.clarity('set', cle, valeur); } catch(e) {} }
   __phProps[cle] = valeur;
@@ -87,6 +104,15 @@ function loadTrackers(){
     t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
     y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
   })(window, document, "clarity", "script", CLARITY_ID);
+
+  /* TikTok */
+  if (TIKTOK_PIXEL_ID){
+    !function (w, d, t) {
+      w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+      ttq.load(TIKTOK_PIXEL_ID);
+      ttq.page();
+    }(window, document, 'ttq');
+  }
 
   /* ChatGPT */
   !function(w,d,s,u){if(w.oaiq)return;var q=function(){q.q.push(arguments)};q.q=[];w.oaiq=q;var j=d.createElement(s);j.async=1;j.src=u;var f=d.getElementsByTagName(s)[0];f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");
@@ -1259,12 +1285,15 @@ var tracking = {
   fbclid:       p('fbclid'),
   oppref:       p('oppref') || (document.cookie.match(/(?:^|; )__oppref=([^;]*)/) || [])[1] || '',
   gclid:        p('gclid'),
+  ttclid:       p('ttclid'),   /* identifiant de clic TikTok */
   referrer:     document.referrer || ''
 };
 
-/* Canal final : FBA (Meta) / GPT (ChatGPT) / ADW (Google Ads). Le paramètre d'URL fait foi, le referrer sert de filet */
-var META_PLACEMENTS = ['fba','fb','ig','an','th','msg','fbreels','igreels',
-                       'audience_network','messenger','threads','whatsapp','wa'];
+/* Canal final : quatre valeurs seulement, GPT / ADW / TTK / FBA.
+   ChatGPT, Google et TikTok sont identifiés explicitement ; tout le reste
+   part en FBA — accès direct, autre site référent et utm_source inconnu
+   compris. Le placement Meta ({{placement}} : fb, ig, an, th, msg) reste
+   lisible dans utm_source et dans la propriété « placement » de PostHog. */
 tracking.canal = (function(){
   var src = tracking.utm_source.toLowerCase();
   var r   = tracking.referrer.toLowerCase();
@@ -1286,6 +1315,12 @@ tracking.canal = (function(){
   if (src === 'adw' || src === 'gads' || src.indexOf('google') > -1 || src.indexOf('adwords') > -1) return 'ADW';
   if (tracking.gclid) return 'ADW';
   if (GOOGLE_RECHERCHE.test(hote)) return 'ADW';
+
+  /* TikTok : source, identifiant de clic TikTok Ads, ou site référent.
+     Pangle est le réseau d'audience de TikTok, il remonte donc en TTK. */
+  if (src === 'ttk' || src === 'tt' || src.indexOf('tiktok') > -1 || src.indexOf('pangle') > -1) return 'TTK';
+  if (tracking.ttclid) return 'TTK';
+  if (r.indexOf('tiktok.com') > -1) return 'TTK';
 
   /* Tout le reste : accès direct, autre site référent, utm_source inconnu,
      placements Meta (fb, ig, an, th, msg), fbclid. */
@@ -1441,6 +1476,7 @@ for (var i=0;i<opts.length;i++){
     this.classList.add('selected');
     var next = current + 1;
     if (next === 4 && window.fbq) { fbq('track', 'ViewContent', { content_name: 'Formulaire coordonnees - Vehicule de societe' }); }
+    if (next === 4 && window.ttq) { ttq.track('ViewContent', { contents: [{ content_id: 'devis-vehicule-societe', content_type: 'product', content_name: 'Formulaire coordonnees - Vehicule de societe' }] }); }
     setTimeout(function(){ showCard(next); }, 180);
   });
 }
@@ -1884,6 +1920,8 @@ function envoyer(){
     utm_term: tracking.utm_term,
     fbclid: tracking.fbclid,
     oppref: tracking.oppref,
+    gclid:  tracking.gclid,
+    ttclid: tracking.ttclid,
     referrer: tracking.referrer,
     source: tracking.canal,
     formulaire: FORMULAIRE,
@@ -1922,6 +1960,31 @@ function envoyer(){
       value: 0,
       currency: 'EUR'
     }, { eventID: leadId });
+  }
+
+  /* TikTok
+     ttq.identify doit précéder ttq.track. Le hachage est asynchrone : on ne
+     bloque pas l'envoi du lead, qui part juste après ce bloc. En cas d'échec
+     du hachage, l'événement part quand même, sans correspondance avancée. */
+  if (window.ttq) {
+    var courriel = (payload.email || '').trim().toLowerCase();
+    var tel164   = (answers.telephone_e164 || '').replace(/[^0-9+]/g, '');
+    Promise.all([empreinte(courriel), empreinte(tel164), empreinte(leadId)])
+      .then(function(h){
+        try {
+          var ident = {};
+          if (h[0]) ident.email        = h[0];
+          if (h[1]) ident.phone_number = h[1];
+          if (h[2]) ident.external_id  = h[2];
+          if (h[0] || h[1] || h[2]) ttq.identify(ident);
+        } catch(e) {}
+        try {
+          ttq.track('Lead', {}, { event_id: leadId });   /* déduplication avec l'API Events */
+        } catch(e) {}
+      })
+      .catch(function(){
+        try { ttq.track('Lead', {}, { event_id: leadId }); } catch(e) {}
+      });
   }
 
   /* ===== ENVOI DU LEAD (après les events de conversion) ===== */
